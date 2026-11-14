@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PATRON Forecast Output",
+  "type": "object",
+  "required": [
+    "status",
+    "symbol",
+    "as_of",
+    "horizon_minutes",
+    "model_version",
+    "pattern_scores",
+    "barrier_probabilities",
+    "range_quantiles",
+    "momentum",
+    "data_quality"
+  ],
+  "properties": {
+    "status": {
+      "enum": [
+        "OK",
+        "NO_OUTPUT"
+      ]
+    },
+    "symbol": {
+      "type": "string"
+    },
+    "as_of": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "horizon_minutes": {
+      "const": 90
+    },
+    "model_version": {
+      "type": "string"
+    },
+    "feature_version": {
+      "type": "string"
+    },
+    "pattern_scores": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      }
+    },
+    "barrier_probabilities": {
+      "type": "object",
+      "required": [
+        "tp_first",
+        "sl_first",
+        "timeout"
+      ],
+      "properties": {
+        "tp_first": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "sl_first": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "timeout": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "range_quantiles": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "required": [
+          "step",
+          "minutes_ahead",
+          "high",
+          "low",
+          "close"
+        ],
+        "properties": {
+          "step": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6
+          },
+          "minutes_ahead": {
+            "type": "integer",
+            "minimum": 15,
+            "maximum": 90
+          },
+          "high": {
+            "$ref": "#/$defs/quantiles"
+          },
+          "low": {
+            "$ref": "#/$defs/quantiles"
+          },
+          "close": {
+            "$ref": "#/$defs/quantiles"
+          }
+        }
+      }
+    },
+    "momentum": {
+      "type": "object",
+      "required": [
+        "class_probabilities",
+        "predicted_class"
+      ],
+      "properties": {
+        "class_probabilities": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "predicted_class": {
+          "type": "string"
+        }
+      }
+    },
+    "data_quality": {
+      "type": "object",
+      "required": [
+        "valid",
+        "closed_candles",
+        "sequence_length"
+      ],
+      "properties": {
+        "valid": {
+          "type": "boolean"
+        },
+        "closed_candles": {
+          "type": "integer"
+        },
+        "sequence_length": {
+          "const": 96
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "quantiles": {
+      "type": "object",
+      "required": [
+        "q10",
+        "q50",
+        "q90"
+      ],
+      "properties": {
+        "q10": {
+          "type": "number"
+        },
+        "q50": {
+          "type": "number"
+        },
+        "q90": {
+          "type": "number"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

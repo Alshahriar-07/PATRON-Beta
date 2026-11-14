@@ -1,0 +1,125 @@
+project:
+  name: PATRON
+  full_name: Pattern Recognition & Outcome Network
+  version: 1.0.0
+  task: btc_usdt_pattern_recognition_and_forecasting
+
+market:
+  exchange: binance
+  market_type: spot
+  symbol: BTC/USDT
+  timeframe: 15m
+  context_timeframes: [1h, 4h]
+  history_years_target: 5
+  only_closed_candles: true
+
+input:
+  sequence_length: 96
+  feature_count: 12
+  dtype: float32
+  order: oldest_to_newest
+  feature_order:
+    - open_rel
+    - high_rel
+    - low_rel
+    - close_rel
+    - volume_log_rel
+    - body_to_range
+    - atr14_pct
+    - rsi14_scaled
+    - ema9_gap
+    - ema21_gap
+    - volume_spike
+    - htf_trend
+
+forecast:
+  horizon_candles: 6
+  horizon_minutes: 90
+  barrier:
+    atr_period: 14
+    tp_atr_multiplier: 1.5
+    sl_atr_multiplier: 1.0
+    ambiguous_same_candle: exclude_from_primary_loss
+  range:
+    fields: [high, low, close]
+    quantiles: [0.1, 0.5, 0.9]
+    per_future_candle: true
+    target_space: relative_to_last_close
+  momentum:
+    classes:
+      - strong_bullish
+      - bullish
+      - sideways
+      - bearish
+      - strong_bearish
+    normalized_return_boundaries: [-1.0, -0.35, 0.35, 1.0]
+  pattern_tags:
+    - doji
+    - hammer
+    - inverted_hammer
+    - hanging_man
+    - shooting_star
+    - bullish_engulfing
+    - bearish_engulfing
+    - piercing_line
+    - dark_cloud_cover
+    - morning_star
+    - evening_star
+    - three_candle_continuation_reversal
+
+model:
+  architecture: cnn_bilstm_self_attention
+  input_projection_dim: 32
+  cnn_channels: [32, 64, 64]
+  cnn_kernels: [3, 5, 7]
+  bilstm_hidden_per_direction: 64
+  bilstm_layers: 1
+  attention_heads: 4
+  attention_dim: 128
+  shared_dim: 64
+  dropout: 0.15
+  target_trainable_parameters: [200000, 1000000]
+
+training:
+  framework: pytorch
+  optimizer: AdamW
+  learning_rate: 0.0003
+  weight_decay: 0.0001
+  batch_size: 128
+  max_epochs: 100
+  early_stopping_patience: 12
+  gradient_clip_norm: 1.0
+  random_seed: 42
+  loss_weights:
+    barrier: 1.0
+    quantile: 0.5
+    momentum: 0.2
+    pattern: 0.15
+
+validation:
+  method: walk_forward
+  purge_bars: 6
+  embargo_bars: 6
+  final_test_untouched: true
+  calibrator: temperature_scaling
+  baseline_models: [majority, momentum_rule, mean_reversion, lightgbm]
+
+runtime:
+  inference_batch_size: 1
+  reject_nan_inf: true
+  reject_unclosed_candle: true
+  reject_stale_data: true
+  live_order_execution: false
+
+# --- Additive section (not part of the original ZIP config) -------------------
+# Reason: Phase 1 needs deterministic download/storage parameters. It does not
+# alter any model, feature or label semantics from the ZIP specification.
+data:
+  source: binance_vision            # monthly kline archives + REST for the tail
+  base_url: https://data.binance.vision
+  rest_base_url: https://api.binance.com
+  start: "2021-11-01"               # ~5 years of 15m history
+  end: null                         # null = latest available
+  timeframes: [15m, 1h, 4h]
+  request_pause_seconds: 0.15
+  raw_overwrite: false

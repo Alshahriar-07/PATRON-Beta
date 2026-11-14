@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "patron"
+version = "1.0.0"
+description = "PATRON - Pattern Recognition & Outcome Network for BTC/USDT"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "pyarrow>=15.0",
+    "scikit-learn>=1.4",
+    "torch>=2.2",
+    "PyYAML>=6.0",
+    "pydantic>=2.6",
+    "lightgbm>=4.3",
+    "matplotlib>=3.8",
+    "pytest>=8.0",
+    "tqdm>=4.66",
+    "requests>=2.31",
+    "jsonschema>=4.20",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

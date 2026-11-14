@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PATRON Inference Input",
+  "type": "object",
+  "required": [
+    "symbol",
+    "timeframe",
+    "candles"
+  ],
+  "properties": {
+    "symbol": {
+      "const": "BTC/USDT"
+    },
+    "timeframe": {
+      "const": "15m"
+    },
+    "candles": {
+      "type": "array",
+      "minItems": 96,
+      "maxItems": 96,
+      "items": {
+        "type": "object",
+        "required": [
+          "timestamp",
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume"
+        ],
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "open": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "high": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "low": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "close": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "volume": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "last_closed_1h": {
+          "type": "object"
+        },
+        "last_closed_4h": {
+          "type": "object"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

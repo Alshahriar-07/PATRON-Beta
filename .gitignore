@@ -1,0 +1,148 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.bin/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+#   For a library or package, you might want to ignore these files since they are
+#   local
+.python-version
+
+# pipenv
+#   According to pypa/pipenv#598, it is recommended to checkin Pipfile.lock into version control.
+#   However, in some cases, you may wish to ignore it.
+#   Pipfile.lock
+
+# Poetry
+#   Similar to Pipfile.lock, it is generally recommended to checkin poetry.lock into version control.
+#   This is a personal preference depending on whether you want to build a library or an application.
+#   poetry.lock
+
+# pdm
+#   Similar to Poetry, it is generally recommended to checkin pdm.lock into version control.
+# pdm.lock
+.pdm.toml
+
+# PEP 582; used by e.g. PDM, Hatch, and Flit
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# PyCharm
+.idea
+
+# VS Code
+.vscode/
+
+# --- Project-Specific Ignores ---
+
+# Ignore local runtime data, databases, or cache stored in data/
+data/*
+!data/.gitkeep
+
+# Ignore local logs and output files
+logs/*
+!logs/.gitkeep
+
+# Ignore experiment artifacts, weights, or temporary outputs
+experiments/*
+!experiments/.gitkeep
+
+# Ignore generated reports
+reports/*
+!reports/.gitkeep
+Plan/
