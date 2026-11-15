@@ -1,0 +1,77 @@
+# PATRON autonomous runtime configuration (versioned separately from model_config.yaml).
+# Every threshold below is a policy input: change it deliberately, it is logged with
+# each decision and stored with the forecast/registry records it influenced.
+
+version: "1.0.0"
+
+symbol: BTC/USDT
+timeframe: 15m
+
+source:
+  venue: binance                 # adapter slug, see patron.data.markets
+  market_type: spot
+  confirm_delay_seconds: 20      # wait after candle close before trusting the source
+  lookback_hours: 240            # 10 days: covers 384 warm-up + 96 window on a cold start;
+                                 # re-fetched every cycle so delayed/revised bars reconcile
+  request_pause_seconds: 0.15
+
+history:
+  sequence_length: 96            # model input, closed candles only
+  warmup_bars: 384               # indicator context, never model tokens
+
+storage:
+  database: data/runtime/patron.db
+  output_dir: reports/live
+  forecast_ledger: data/runtime/forecasts
+
+monitoring:
+  window_forecasts: 500
+  min_samples: 50
+  coverage_bounds: [0.60, 0.99]
+  stale_after_seconds: 1200      # 20 min without a completed cycle => STALE_DATA
+  degradation:
+    metric: barrier_accuracy
+    floor: 0.30
+    min_samples: 200
+    window_forecasts: 300
+
+drift:
+  min_samples: 100
+  feature_z_threshold: 3.0
+  psi_threshold: 0.25
+  min_drifting_features: 3
+  outcome_psi_threshold: 0.25
+
+learning:
+  enabled: true
+  min_new_matured_examples: 288  # 3 days of 15m bars
+  schedule_hours: 168            # weekly safety net
+  cooldown_hours: 24
+  replay_dataset: data/features/BTCUSDT_dataset.parquet
+  recent_fraction: 0.35          # cap on newest-data share (forgetting guard)
+  train_epochs: 6
+  train_stride: 2
+  threads: 6
+  max_runtime_minutes: 120
+  # Empty => use `scripts/train.py`; tests inject a stub command.
+  command: []
+
+governance:
+  min_validation_samples: 2000
+  max_logloss_delta: 0.02
+  max_accuracy_drop: 0.01
+  coverage_bounds: [0.60, 0.99]
+  min_seeds: 1
+  mandatory_gates:
+    - schema_valid
+    - probabilities_valid
+    - min_samples
+    - logloss_not_worse
+    - accuracy_not_worse
+    - coverage_ok
+
+server:
+  poll_seconds: 20
+  heartbeat_seconds: 60
+  max_cycles_per_run: 0          # 0 = unlimited (serve mode)
+  shutdown_timeout_seconds: 5

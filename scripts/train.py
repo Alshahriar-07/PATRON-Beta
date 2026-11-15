@@ -21,7 +21,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--run-name", default=None)
     parser.add_argument("--epochs", type=int, default=None, help="override max epochs (debug)")
     parser.add_argument("--batch-size", type=int, default=None)
-    parser.add_argument("--stride", type=int, default=1)
+    parser.add_argument("--stride", type=int, default=1, help="subsample every split (legacy)")
+    parser.add_argument(
+        "--train-stride",
+        type=int,
+        default=None,
+        help="subsample training windows only; validation/test keep full size",
+    )
     parser.add_argument("--threads", type=int, default=6)
     args = parser.parse_args(argv)
 
@@ -29,7 +35,7 @@ def main(argv: list[str] | None = None) -> int:
     setup_logging()
     cfg = load_config(args.config)
 
-    data = prepare_data(cfg, args.dataset, stride=args.stride)
+    data = prepare_data(cfg, args.dataset, stride=args.stride, train_stride=args.train_stride)
     model = build_model(cfg)
     print(f"model parameters: {count_parameters(model):,}")
 

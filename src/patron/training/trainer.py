@@ -116,8 +116,10 @@ def train(
     batch_size: int | None = None,
     num_threads: int | None = None,
     log_every: int = 1,
+    seed: int | None = None,
 ) -> TrainingHistory:
-    set_seed(cfg.training.random_seed)
+    seed = int(seed if seed is not None else cfg.training.random_seed)
+    set_seed(seed)
     if num_threads:
         torch.set_num_threads(num_threads)
 
@@ -128,7 +130,7 @@ def train(
 
     batch_size = batch_size or cfg.training.batch_size
     max_epochs = max_epochs or cfg.training.max_epochs
-    generator = torch.Generator().manual_seed(cfg.training.random_seed)
+    generator = torch.Generator().manual_seed(seed)
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, generator=generator)
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
 
@@ -149,6 +151,11 @@ def train(
 
     optimizer = torch.optim.AdamW(
         model.parameters(), lr=cfg.training.learning_rate, weight_decay=cfg.training.weight_decay
+    )
+    # Spec allows ReduceLROnPlateau or cosine+warmup; the plateau variant is used
+    # because it reacts to the actual validation loss on a small CPU budget.
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode="min", factor=0.5, patience=3, min_lr=1e-5
     )
 
     stamp = time.strftime("%Y%m%d-%H%M%S")
@@ -176,11 +183,16 @@ def train(
             "max_epochs": max_epochs,
             "barrier_weights": barrier_w.tolist(),
             "momentum_weights": momentum_w.tolist(),
+            "scheduler": "ReduceLROnPlateau(factor=0.5, patience=3, min_lr=1e-5)",
+            "seed": seed,
+            "dataset_version": "1.0.0",
+            "feature_version": "1.0.0",
         }
     )
 
     for epoch in range(1, max_epochs + 1):
         started = time.time()
+        epoch_lr = optimizer.param_groups[0]["lr"]
         model.train()
         sums: dict[str, float] = {}
         n_batches = 0
@@ -203,6 +215,7 @@ def train(
         val_terms, val_metrics = evaluate(
             model, val_loader, loss_weights, quantiles, barrier_w, momentum_w
         )
+        scheduler.step(val_terms["loss"])
         elapsed = time.time() - started
         record = EpochRecord(
             epoch=epoch,
@@ -212,7 +225,7 @@ def train(
             val_terms=val_terms,
             val_barrier_accuracy=val_metrics["barrier_accuracy"],
             val_momentum_accuracy=val_metrics["momentum_accuracy"],
-            lr=optimizer.param_groups[0]["lr"],
+            lr=epoch_lr,
             seconds=elapsed,
         )
         history.records.append(record)
@@ -270,8 +283,32 @@ def _save_checkpoint(
     )
 
 
-def load_checkpoint(path: str | Path, map_location: str = "cpu") -> dict:
-    payload = torch.load(Path(path), map_location=map_location, weights_only=False)
+def load_checkpoint(
+    path: str | Path, map_location: str = "cpu", allow_unsafe: bool = False
+) -> dict:
+    """Load a PATRON checkpoint.
+
+    Checkpoints are loaded with ``weights_only=True`` so a malicious file cannot
+    execute code through pickle. Files that genuinely need full unpickling (for
+    example an older checkpoint holding a custom object) must opt in explicitly
+    with ``allow_unsafe=True``; that is never the default for CLI input.
+    """
+    target = Path(path)
+    if not target.is_file():
+        raise FileNotFoundError(f"checkpoint not found: {target}")
+    try:
+        payload = torch.load(target, map_location=map_location, weights_only=True)
+    except Exception as exc:
+        if not allow_unsafe:
+            raise ValueError(
+                f"checkpoint {target.name} could not be loaded in safe mode "
+                f"({type(exc).__name__}); only load checkpoints you trust, and pass "
+                "allow_unsafe=True if this file legitimately needs full unpickling"
+            ) from exc
+        LOGGER.warning("loading %s with allow_unsafe=True (full unpickling)", target)
+        payload = torch.load(target, map_location=map_location, weights_only=False)
+    if not isinstance(payload, dict):
+        raise ValueError(f"checkpoint {target.name} is not a PATRON checkpoint dict")
     required = {"model_state", "config", "feature_order", "scaler"}
     missing = required - set(payload)
     if missing:

@@ -1,0 +1,48 @@
+name: Feature request
+description: Propose a capability, experiment or documentation change
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        PATRON's model contract (12 features, 96 candles, 6-bar horizon, 272,618
+        parameters, four heads) is frozen. Proposals that change it need a model
+        version, an ablation and a promotion gate — say so up front if that is the ask.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of change
+      options:
+        - tooling / developer experience
+        - evaluation or reporting
+        - training methodology (T2–T12 scope)
+        - runtime operations
+        - documentation
+        - contract change (needs a new model version)
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is hard or missing today? Link the code or report if you can.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: How success would be measured
+      description: Metric, split, seed count and the threshold that would count as an improvement.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: This does not require look-ahead or fabricated data
+        - label: I checked `plan/ADVANCED_TRAINING_UPGRADE.md` and `LIMITATIONS.md`

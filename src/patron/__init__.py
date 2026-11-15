@@ -5,4 +5,4 @@ next 6 candles (90 minutes) with triple-barrier probabilities, per-step
 High/Low/Close quantiles and a five-class momentum forecast.
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.0b1"

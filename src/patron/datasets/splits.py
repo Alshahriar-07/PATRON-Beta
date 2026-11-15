@@ -106,13 +106,25 @@ def walk_forward_folds(
     return folds
 
 
-def split_dates(frame: pd.DataFrame, split: ChronologicalSplit) -> dict:
-    """Human-readable date ranges for experiment records."""
+def split_dates(
+    frame: pd.DataFrame,
+    split: ChronologicalSplit,
+    positions: np.ndarray | None = None,
+) -> dict:
+    """Human-readable date ranges for experiment records.
+
+    ``split`` holds indices into the array of *valid window positions*; when
+    ``positions`` (bar indices) is supplied the indices are mapped through it.
+    Without it the indices are treated as bar indices, which is only correct for
+    contiguous position arrays — window builds drop rows, so callers should pass
+    ``positions``.
+    """
 
     def _range(indices: np.ndarray) -> dict | None:
         if len(indices) == 0:
             return None
-        ts = pd.to_datetime(frame["timestamp_open"].iloc[indices], utc=True)
+        bars = positions[indices] if positions is not None else indices
+        ts = pd.to_datetime(frame["timestamp_open"].iloc[bars], utc=True)
         return {"start": ts.iloc[0].isoformat(), "end": ts.iloc[-1].isoformat(), "count": int(len(indices))}
 
     return {"train": _range(split.train), "val": _range(split.val), "test": _range(split.test)}

@@ -51,7 +51,13 @@ class Predictor:
 
 
 def _load_schema(name: str = "input.schema.json") -> dict:
-    candidates = [SCHEMA_DIR / name, Path("Plan") / "schemas" / name]
+    # The package copy makes an installed wheel self-contained; the repository
+    # copy is canonical and a test asserts they are byte-identical.
+    candidates = [
+        Path(__file__).resolve().parents[1] / "schemas" / name,
+        SCHEMA_DIR / name,
+        Path("Plan") / "schemas" / name,
+    ]
     for path in candidates:
         if path.exists():
             return json.loads(path.read_text(encoding="utf-8"))

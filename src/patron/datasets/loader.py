@@ -50,11 +50,12 @@ def prepare_data(
     dataset_path: str | Path | None = None,
     scaler_file: str | Path | None = None,
     stride: int = 1,
+    train_stride: int | None = None,
 ) -> PreparedData:
     frame = load_frame(cfg, dataset_path)
     scaler = RobustFeatureScaler.load(scaler_file or scaler_path())
     scaled = scaler.transform_frame(frame)
-    bundles = make_datasets(scaled, frame, cfg, stride=stride)
+    bundles = make_datasets(scaled, frame, cfg, stride=stride, train_stride=train_stride)
     return PreparedData(frame=frame, scaler=scaler, scaled_features=scaled, bundles=bundles)
 
 

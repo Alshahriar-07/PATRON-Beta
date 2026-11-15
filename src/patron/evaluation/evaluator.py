@@ -116,8 +116,8 @@ def run_evaluation(
         "model_version": cfg.project.version,
         "feature_version": "features-1.0.0",
         "splits": {
-            "val": split_dates(data.frame, data.bundles.split)["val"],
-            "test": split_dates(data.frame, data.bundles.split)["test"],
+            "val": split_dates(data.frame, data.bundles.split, data.bundles.positions)["val"],
+            "test": split_dates(data.frame, data.bundles.split, data.bundles.positions)["test"],
         },
         "temperature": temperature,
         "val": evaluate_split(val_preds, cfg, temperature),
@@ -161,7 +161,7 @@ def report_to_markdown(report: dict) -> str:
     ]
     raw = test["barrier"]["raw"]
     cal = test["barrier"].get("calibrated") or {}
-    for key in ("accuracy", "macro_f1", "log_loss", "ece", "roc_auc_ovr"):
+    for key in ("accuracy", "balanced_accuracy", "macro_f1", "log_loss", "ece", "roc_auc_ovr"):
         lines.append(
             f"| {key} | {_fmt(raw.get(key))} | {_fmt(cal.get(key))} |"
         )
@@ -175,6 +175,7 @@ def report_to_markdown(report: dict) -> str:
         "## Momentum (5 classes)",
         "",
         f"- accuracy: {_fmt(test['momentum'].get('accuracy'))}",
+        f"- balanced accuracy: {_fmt(test['momentum'].get('balanced_accuracy'))}",
         f"- macro F1: {_fmt(test['momentum'].get('macro_f1'))}",
         f"- log loss: {_fmt(test['momentum'].get('log_loss'))}",
         f"- ECE: {_fmt(test['momentum'].get('ece'))}",

@@ -60,7 +60,15 @@ def _payload(window):
 def test_rejects_sample_placeholder_with_duplicate_timestamps():
     import json
 
-    payload = json.loads(Path("Plan/examples/sample_input.json").read_text())
+    # ``examples/invalid_input.json`` is the deliberately malformed placeholder that
+    # ships with the repository (duplicate/gapped timestamps). ``Plan/`` is the local
+    # spec bundle and is only a fallback for development checkouts.
+    candidate = Path("examples/invalid_input.json")
+    if not candidate.exists():
+        candidate = Path("Plan/examples/sample_input.json")
+    if not candidate.exists():
+        pytest.skip("invalid input fixture not available")
+    payload = json.loads(candidate.read_text(encoding="utf-8"))
     with pytest.raises(InputValidationError, match="ordered|duplicate|15 minutes"):
         validate_payload(payload)
 

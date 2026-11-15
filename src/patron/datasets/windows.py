@@ -140,8 +140,17 @@ def make_datasets(
     frame: pd.DataFrame,
     cfg,
     stride: int = 1,
+    train_stride: int | None = None,
 ) -> PatronDatasets:
-    """Build train/val/test sequence datasets with purge + embargo."""
+    """Build train/val/test sequence datasets with purge + embargo.
+
+    ``stride`` subsamples every split (legacy behaviour, used by the multi-seed
+    runs). ``train_stride`` subsamples only the training block, *after* the
+    chronological split, so validation and test keep their full size and stay
+    directly comparable to the baseline evaluation. Prefer ``train_stride`` for
+    experiments: adjacent 96-candle windows overlap by 95 bars, so training on
+    every window mostly re-weights the same stretches of history.
+    """
     stats = valid_window_positions(
         frame, seq_len=cfg.sequence_length, horizon=cfg.horizon, stride=stride
     )
@@ -152,6 +161,8 @@ def make_datasets(
         embargo=cfg.validation.embargo_bars,
     )
     train_pos = positions[split_local.train]
+    if train_stride and train_stride > 1:
+        train_pos = train_pos[::train_stride]
     val_pos = positions[split_local.val]
     test_pos = positions[split_local.test]
 

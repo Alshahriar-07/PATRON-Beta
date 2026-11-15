@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PATRON runtime forecast envelope v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "forecast_id", "status", "generated_at", "as_of",
+    "symbol", "timeframe", "candle_open", "model", "input_window", "targets",
+    "horizons", "reference", "freshness", "model_output", "warnings"
+  ],
+  "properties": {
+    "schema_version": {"type": "string", "const": "2.0.0"},
+    "forecast_id": {"type": "string", "minLength": 8},
+    "status": {
+      "type": "string",
+      "enum": ["OK", "PROVISIONAL", "NO_OUTPUT", "INVALID_INPUT", "INSUFFICIENT_HISTORY",
+               "STALE_DATA", "DATA_GAP", "MODEL_UNAVAILABLE", "TRAINING_IN_PROGRESS", "RECOVERING"]
+    },
+    "generated_at": {"type": "string", "format": "date-time"},
+    "as_of": {"type": "string", "format": "date-time"},
+    "symbol": {"type": "string"},
+    "timeframe": {"type": "string"},
+    "candle_open": {"type": "string", "format": "date-time"},
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "checkpoint", "checkpoint_sha256"],
+      "properties": {
+        "name": {"type": "string"},
+        "version": {"type": "string"},
+        "checkpoint": {"type": "string"},
+        "checkpoint_sha256": {"type": "string"},
+        "project_version": {"type": ["string", "null"]},
+        "feature_version": {"type": ["string", "null"]},
+        "calibration_version": {"type": ["string", "null"]}
+      }
+    },
+    "input_window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candles", "start", "end", "hash", "warmup_candles", "sequence_length", "feature_count"],
+      "properties": {
+        "candles": {"type": "integer", "const": 96},
+        "start": {"type": "string", "format": "date-time"},
+        "end": {"type": "string", "format": "date-time"},
+        "hash": {"type": "string", "minLength": 64},
+        "warmup_candles": {"type": "integer", "minimum": 0},
+        "sequence_length": {"type": "integer"},
+        "feature_count": {"type": "integer"}
+      }
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["step", "minutes_ahead", "target_ts"],
+        "properties": {
+          "step": {"type": "integer", "minimum": 1, "maximum": 6},
+          "minutes_ahead": {"type": "integer"},
+          "target_ts": {"type": "string", "format": "date-time"}
+        }
+      }
+    },
+    "horizons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["step", "target_ts", "status"],
+        "properties": {
+          "step": {"type": "integer"},
+          "target_ts": {"type": "string", "format": "date-time"},
+          "status": {"type": "string"},
+          "evaluated_at": {"type": ["string", "null"]},
+          "pinball_mean": {"type": ["number", "null"]},
+          "direction_correct": {"type": ["boolean", "null"]},
+          "coverage": {"type": ["object", "null"]}
+        }
+      }
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["close", "atr14", "feature_snapshot"],
+      "properties": {
+        "close": {"type": "number", "exclusiveMinimum": 0},
+        "atr14": {"type": "number", "minimum": 0},
+        "feature_snapshot": {
+          "type": "object",
+          "additionalProperties": {"type": "number"}
+        }
+      }
+    },
+    "freshness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["as_of", "age_seconds", "source", "stale"],
+      "properties": {
+        "as_of": {"type": "string", "format": "date-time"},
+        "age_seconds": {"type": "number", "minimum": 0},
+        "source": {"type": "string"},
+        "stale": {"type": "boolean"}
+      }
+    },
+    "model_output": {"type": "object"},
+    "warnings": {"type": "array", "items": {"type": "string"}},
+    "performance_summary": {"type": "object"},
+    "current_status": {"type": "string"},
+    "stale": {"type": "boolean"},
+    "published_at": {"type": "string", "format": "date-time"}
+  }
+}

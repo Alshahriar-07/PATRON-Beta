@@ -8,7 +8,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+# Source checkout: src/patron/paths.py -> project root. Installed wheel: the
+# parent-of-src does not exist, so fall back to the working directory (the user's
+# project) rather than writing logs into site-packages.
+_SOURCE_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = _SOURCE_ROOT if (_SOURCE_ROOT / "config").is_dir() else Path.cwd()
 
 CONFIG_DIR = PROJECT_ROOT / "config"
 SCHEMA_DIR = PROJECT_ROOT / "schemas"
@@ -17,6 +21,11 @@ RAW_DIR = DATA_DIR / "raw"
 CLEAN_DIR = DATA_DIR / "clean"
 FEATURE_DIR = DATA_DIR / "features"
 MANIFEST_DIR = DATA_DIR / "manifests"
+PROCESSED_DIR = DATA_DIR / "processed"
+EXCHANGE_DIR = PROCESSED_DIR / "exchange"
+UNIFIED_DIR = PROCESSED_DIR / "unified"
+PATTERN_DIR = PROCESSED_DIR / "patterns"
+ASSET_DIR = PROCESSED_DIR / "assets"
 EXPERIMENT_DIR = PROJECT_ROOT / "experiments"
 CHECKPOINT_DIR = PROJECT_ROOT / "checkpoints"
 REPORT_DIR = PROJECT_ROOT / "reports"
@@ -32,6 +41,11 @@ def ensure_dirs() -> None:
         CONFIG_DIR,
         SCHEMA_DIR,
         RAW_DIR,
+        PROCESSED_DIR,
+        EXCHANGE_DIR,
+        UNIFIED_DIR,
+        PATTERN_DIR,
+        ASSET_DIR,
         CLEAN_DIR,
         FEATURE_DIR,
         MANIFEST_DIR,

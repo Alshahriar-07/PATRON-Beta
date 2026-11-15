@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from patron.datasets.splits import split_dates
 from patron.datasets.splits import chronological_split
 from patron.datasets.windows import make_datasets, valid_window_positions
 from patron.features.builder import build_features
@@ -89,3 +90,45 @@ def test_dataset_is_not_shuffled(dataset_frame, cfg):
     assert np.all(np.diff(bundles.train.positions) > 0)
     assert np.all(np.diff(bundles.test.positions) > 0)
     assert bundles.train.positions.max() < bundles.val.positions.min() < bundles.test.positions.min()
+
+
+def test_train_stride_keeps_validation_and_test_intact(dataset_frame, cfg):
+    """Training-window subsampling must not shrink val/test (audit finding F7)."""
+    scaler = RobustFeatureScaler.fit(
+        dataset_frame.loc[dataset_frame["feature_valid"], list(FEATURE_ORDER)].to_numpy(),
+        list(FEATURE_ORDER),
+    )
+    scaled = scaler.transform_frame(dataset_frame)
+    full = make_datasets(scaled, dataset_frame, cfg)
+    strided = make_datasets(scaled, dataset_frame, cfg, train_stride=4)
+
+    assert len(strided.val) == len(full.val)
+    assert len(strided.test) == len(full.test)
+    expected = len(full.train) // 4 + (1 if len(full.train) % 4 else 0)
+    assert len(strided.train) == expected
+    assert np.array_equal(strided.train.positions, full.train.positions[::4])
+    assert strided.train.positions.max() < strided.val.positions.min()
+    assert int(strided.split.train_end) == int(full.split.train_end)
+
+
+def test_split_dates_map_positions_to_bar_timestamps(dataset_frame, cfg):
+    """Split indices index the *position array*, not the frame rows.
+
+    With gaps and label-tail drops, treating sample indices as bar indices
+    under-reports the split's end date; the mapping must go through `positions`.
+    """
+    scaler = RobustFeatureScaler.fit(
+        dataset_frame.loc[dataset_frame["feature_valid"], list(FEATURE_ORDER)].to_numpy(),
+        list(FEATURE_ORDER),
+    )
+    scaled = scaler.transform_frame(dataset_frame)
+    bundles = make_datasets(scaled, dataset_frame, cfg)
+
+    naive = split_dates(dataset_frame, bundles.split)
+    mapped = split_dates(dataset_frame, bundles.split, bundles.positions)
+
+    expected_test_start = pd.to_datetime(
+        dataset_frame["timestamp_open"].iloc[int(bundles.test.positions[0])], utc=True
+    ).isoformat()
+    assert mapped["test"]["start"] == expected_test_start
+    assert mapped["test"]["start"] != naive["test"]["start"]

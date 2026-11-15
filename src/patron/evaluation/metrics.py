@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 from sklearn.metrics import (
     average_precision_score,
+    balanced_accuracy_score,
     confusion_matrix,
     f1_score,
     log_loss,
@@ -49,6 +50,7 @@ def classification_metrics(
     out = {
         "n": int(len(labels)),
         "accuracy": float((predictions == labels).mean()),
+        "balanced_accuracy": float(balanced_accuracy_score(labels, predictions)),
         "macro_f1": float(f1_score(labels, predictions, average="macro", zero_division=0)),
         "log_loss": float(log_loss(labels, probabilities, labels=list(range(len(class_names))))),
         "ece": expected_calibration_error(probabilities, labels),

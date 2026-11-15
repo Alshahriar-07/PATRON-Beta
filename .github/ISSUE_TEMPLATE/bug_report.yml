@@ -1,0 +1,58 @@
+name: Bug report
+description: Something in PATRON does not behave as documented
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Do **not** include API keys, checkpoints, private market
+        data or security issues here — use the private advisory process in `SECURITY.md`.
+  - type: input
+    id: version
+    attributes:
+      label: PATRON version / commit
+      placeholder: "1.0.0-beta.1 (or git rev-parse HEAD)"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - install / packaging
+        - CLI or health check
+        - data download / dataset build
+        - training
+        - evaluation
+        - inference
+        - autonomous runtime
+        - documentation
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Exact command, exit code, and the shortest output that shows the problem.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Output of `python -m patron health --json` (it contains no secrets) and your OS.
+      render: json
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I ran `python -m patron health` and `python -m pytest`
+        - label: I searched existing issues

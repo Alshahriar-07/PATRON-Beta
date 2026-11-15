@@ -46,3 +46,11 @@ def cfg():
 @pytest.fixture(scope="session")
 def candles():
     return make_candles()
+
+
+@pytest.fixture(scope="session")
+def dataset_frame(cfg):
+    """Supervised dataset frame shared by the dataset/leakage tests."""
+    from patron.labels.builder import build_dataset_frame
+
+    return build_dataset_frame(make_candles(1400, seed=11), cfg)

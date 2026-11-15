@@ -146,3 +146,13 @@ experiments/*
 reports/*
 !reports/.gitkeep
 Plan/
+# --- Release / security additions ---
+.env
+.env.*
+!.env.example
+dist/
+*.pt
+*.db
+*.sqlite3
+.ruff_cache/
+.venv*/

@@ -122,7 +122,7 @@ def run_baselines(
     X_train = scaled_features[train_pos][train_mask]
     X_test = scaled_features[test_pos][test_mask]
     if X_train.shape[0] > 100 and X_test.shape[0] > 0:
-        lr = LogisticRegression(max_iter=1000, multi_class="multinomial", n_jobs=-1)
+        lr = LogisticRegression(max_iter=1000)
         lr.fit(X_train, y_barrier_train[train_mask])
         pred = lr.predict(X_test)
         results.append(
@@ -139,7 +139,7 @@ def run_baselines(
 
         train_mask_m = y_momentum_train >= 0
         test_mask_m = y_momentum_test >= 0
-        lr_m = LogisticRegression(max_iter=1000, multi_class="multinomial", n_jobs=-1)
+        lr_m = LogisticRegression(max_iter=1000)
         lr_m.fit(scaled_features[train_pos][train_mask_m], y_momentum_train[train_mask_m])
         pred_m = lr_m.predict(scaled_features[test_pos][test_mask_m])
         results.append(

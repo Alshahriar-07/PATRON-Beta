@@ -1,0 +1,130 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (must match pyproject, e.g. 1.0.0-beta.1)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: validate tag, tests, build
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Determine version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "release version: $VERSION"
+
+      - name: Version must match pyproject (PEP 440 normalised)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import os, re, sys
+          version = os.environ["VERSION"]
+          text = open("pyproject.toml", encoding="utf-8").read()
+          declared = re.search(r'^version\s*=\s*"([^"]+)"', text, re.M).group(1)
+          normalised = version.replace("-beta.", "b").replace("-alpha.", "a").replace("-rc.", "rc")
+          if normalised != declared:
+              sys.exit(f"tag/input version {version} ({normalised}) != pyproject {declared}")
+          print(f"version ok: {version} -> {declared}")
+          PY
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+
+      - name: Install and test
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install -e . --no-deps
+          python -m pytest
+          python -m patron health
+          python scripts/scan_release.py
+
+      - name: Build release
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          python -m pip install build
+          python scripts/build_release.py --version "$VERSION"
+
+      - name: Verify checksums
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          cd "dist/release/PATRON-v${VERSION}"
+          if command -v sha256sum >/dev/null; then
+            sha256sum -c checksums/SHA256SUMS.txt
+          else
+            shasum -a 256 -c checksums/SHA256SUMS.txt
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: |
+            dist/release/**
+            dist/PATRON-v*-source.*
+            dist/artifacts/**
+          retention-days: 30
+
+  publish:
+    name: publish GitHub release (manual approval)
+    needs: [validate]
+    runs-on: ubuntu-latest
+    # Configure a protected environment named "release" with required reviewers
+    # in repository settings. Until then this job does nothing automatically.
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts
+          path: dist
+      - name: Create GitHub release from artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.validate.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd dist/release/PATRON-v"$VERSION"
+          gh release create "v$VERSION" \
+            --title "PATRON v$VERSION" \
+            --notes-file RELEASE_NOTES.md \
+            --prerelease \
+            PATRON-v"$VERSION"-source.zip \
+            PATRON-v"$VERSION"-source.tar.gz \
+            *.whl *.tar.gz checksums/SHA256SUMS.txt BUILD-MANIFEST.json

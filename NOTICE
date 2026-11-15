@@ -1,0 +1,31 @@
+PATRON — Pattern Recognition & Outcome Network
+Copyright 2026 Al Shahriar sowan
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this product except in compliance with the License. You may obtain a copy of the
+License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.
+
+This distribution bundles or depends on third-party software that remains under
+its own license. See THIRD_PARTY_NOTICES.md for the full list. In particular:
+
+* PyTorch (BSD-3-Clause), NumPy (BSD-3-Clause and bundled licenses),
+  pandas (BSD-3-Clause), scikit-learn (BSD-3-Clause), PyArrow (Apache-2.0),
+  pydantic (MIT), PyYAML (MIT), LightGBM (MIT), jsonschema (MIT),
+  requests (Apache-2.0), tqdm (MPL-2.0 and MIT), pytest (MIT),
+  Matplotlib (PSF-based BSD-style license with bundled fonts under OFL-1.1 and
+  other permissive licenses).
+
+The PATRON source code, configuration, documentation and the trained model
+weights produced by this repository are distributed under Apache-2.0. Market
+data obtained from Binance is NOT distributed with this repository and remains
+subject to Binance's terms of use; users are responsible for obtaining their own
+data in compliance with those terms.
+
+"Binance" is a trademark of its owner. This project is not affiliated with,
+endorsed by, or sponsored by Binance, and it does not execute orders.

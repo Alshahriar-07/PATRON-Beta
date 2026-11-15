@@ -1,12 +1,25 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=84.1"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "patron"
-version = "1.0.0"
-description = "PATRON - Pattern Recognition & Outcome Network for BTC/USDT"
+version = "1.0.0b1"
+description = "PATRON - Pattern Recognition & Outcome Network for BTC/USDT 15m forecasting"
+readme = "README.md"
 requires-python = ">=3.12"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+authors = [{ name = "Al Shahriar sowan" }]
+keywords = ["time-series", "forecasting", "pytorch", "candlestick", "btc-usdt", "research"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
+]
 dependencies = [
     "numpy>=1.26",
     "pandas>=2.1",
@@ -23,8 +36,16 @@ dependencies = [
     "jsonschema>=4.20",
 ]
 
+[project.urls]
+Homepage = "https://github.com/Alshahriar-07/PATRON-Beta"
+Issues = "https://github.com/Alshahriar-07/PATRON-Beta/issues"
+Changelog = "https://github.com/Alshahriar-07/PATRON-Beta/blob/main/CHANGELOG.md"
+
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+patron = ["schemas/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
