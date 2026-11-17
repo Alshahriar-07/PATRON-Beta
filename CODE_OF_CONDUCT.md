@@ -1,8 +1,8 @@
-+++
+
 version = "2.1"
 aliases = ["/version/2/1"]
 reportingPlaceholder = "the maintainer at alshahriarsayon425@gmail.com, or a private GitHub security advisory on the repository"
-+++
+
 
 # Contributor Covenant Code of Conduct
 
